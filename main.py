@@ -9,6 +9,7 @@ import time
 import numpy as np
 import cv2 as cv
 import pygame
+from PIL import Image
 
 client = airsim.MultirotorClient()  # connect to the AirSim simulator
 client.confirmConnection()
@@ -168,7 +169,7 @@ os.chdir(image_folder_path)
 images = [f for f in os.listdir(image_folder_path) if f.endswith('.ppm')]
 image_path = os.path.join(image_folder_path, images[0])
 print(image_path)
-
+"""
 # Read image
 img = cv.imread(image_path)
 # Convert image to grayscale
@@ -194,5 +195,28 @@ for contour in contours:
     print("Bottom right point: ", (x + w, y + h))
 
 # Show the image
-# cv.imshow("Image", gray)
+cv.imshow("Image", gray)
 cv.waitKey(0)
+"""
+# Open image
+im = Image.open(image_path)
+
+# Convert to numpy array
+im_array = np.array(im)
+
+# Get the indices where the background is black and the figure is white
+
+indices = np.where((im_array[:, :, 0] == 255) & (im_array[:, :, 1] == 255) & (im_array[:, :, 2] == 255))
+# Get the coordinates of the white figure
+coords = np.transpose(indices)
+
+# Get the leftmost, rightmost, topmost and bottommost points
+leftmost = np.min(coords[:, 0])
+rightmost = np.max(coords[:, 0])
+topmost = np.min(coords[:, 1])
+bottommost = np.max(coords[:, 1])
+
+print("Leftmost point:", (leftmost, coords[coords[:, 0] == leftmost][0][1]))
+print("Rightmost point:", (rightmost, coords[coords[:, 0] == rightmost][0][1]))
+print("Topmost point:", (coords[coords[:, 1] == topmost][0][0], topmost))
+print("Bottommost point:", (coords[coords[:, 1] == bottommost][0][0], bottommost))
