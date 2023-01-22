@@ -150,16 +150,18 @@ last_folder = folders[-1]
 last_folder_path = os.path.join(path, last_folder)
 image_folder_path = os.path.join(last_folder_path, "images")
 os.chdir(image_folder_path)
-images = [f for f in os.listdir(image_folder_path) if f.endswith('.ppm')]
-image_path = os.path.join(image_folder_path, images[0])
-print(image_path)
-
+images_rgb = [f for f in os.listdir(image_folder_path) if f.endswith('.png')]
+image_path_rgb = os.path.join(image_folder_path, images_rgb[0])
+print(image_path_rgb)
+images_segment = [f for f in os.listdir(image_folder_path) if f.endswith('.ppm')]
+image_path_segment = os.path.join(image_folder_path, images_segment[0])
+print(image_path_segment)
 
 # 读取图像
-img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-
+img_segment = cv2.imread(image_path_segment, cv2.IMREAD_COLOR)
+img_rgb = cv2.imread(image_path_rgb, cv2.IMREAD_COLOR)
 # 转换为灰度图
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+gray = cv2.cvtColor(img_segment, cv2.COLOR_BGR2GRAY)
 
 # 二值化
 thresh = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
@@ -168,19 +170,18 @@ thresh = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
 
 contours, _ = cv2.findContours(thresh[1], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-
 # 找到最小矩形框
 for cnt in contours:
-   x, y, w, h = cv2.boundingRect(cnt)
-   cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
-   print("top-left vertex:","(", x, "," ,y, ")")
-   print("top-right vertex:","(", x+w, "," ,y, ")")
-   print("bottom-left vertex:", "(", x, "," ,y+h, ")")
-   print("bottom-right vertex:", "(", x+w, "," ,y+h, ")")
-
-
+    x, y, w, h = cv2.boundingRect(cnt)
+    cv2.rectangle(img_rgb, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    cv2.rectangle(img_segment, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    print("top-left vertex:", "(", x, ",", y, ")")
+    print("top-right vertex:", "(", x + w, ",", y, ")")
+    print("bottom-left vertex:", "(", x, ",", y + h, ")")
+    print("bottom-right vertex:", "(", x + w, ",", y + h, ")")
 
 # 显示图像
-cv2.imshow("image", img)
+cv2.imshow("img_segment", img_segment)
+cv2.imshow("img_rgb", img_rgb)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
