@@ -4,11 +4,10 @@
 import os
 import sys
 from random import random
-
 import airsim
 import time
 import numpy as np
-import cv2
+import cv2 as cv
 import pygame
 
 client = airsim.MultirotorClient()  # connect to the AirSim simulator
@@ -129,17 +128,14 @@ imu_data = client.getImuData()
 print(imu_data)
 
 print("position:", x, y, z)
-kinematic_state_groundtruth.linear_velocity.x_val  # 速度信息
+xv = kinematic_state_groundtruth.linear_velocity.x_val  # 速度信息
+yv = kinematic_state_groundtruth.linear_velocity.y_val  # 速度信息
+zv = kinematic_state_groundtruth.linear_velocity.z_val  # 速度信息
 xa = kinematic_state_groundtruth.linear_acceleration.x_val  # 加速度信息
 ya = kinematic_state_groundtruth.linear_acceleration.y_val
 za = kinematic_state_groundtruth.linear_acceleration.z_val
 print("acceleration:", xa, ya, za)
 print(airsim.__version__)
-print("Hello, World!")
-
-kinematic_state_groundtruth.orientation  # 姿态信息
-kinematic_state_groundtruth.angular_velocity  # 姿态角速率信息
-kinematic_state_groundtruth.angular_acceleration  # 姿态角加速度信息
 
 f = open('log.txt', 'w')
 f.write("position:" + str(x) + str(y) + str(z) + '\n')
@@ -158,8 +154,45 @@ client.enableApiControl(False)  # 释放控制权
 """
 path = os.getcwd()
 print(path)
-image_dir = 'D:\record'
+path = 'D:/airsimproject/record'
 
 # Get a list of all image files in the directory
-image_package = os.listdir(image_dir)
-print(image_package)
+image_package = os.listdir(path)
+print(path)
+print("Hello, World!")
+folders = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
+last_folder = folders[-1]
+last_folder_path = os.path.join(path, last_folder)
+image_folder_path = os.path.join(last_folder_path, "images")
+os.chdir(image_folder_path)
+images = [f for f in os.listdir(image_folder_path) if f.endswith('.ppm')]
+image_path = os.path.join(image_folder_path, images[0])
+print(image_path)
+
+# Read image
+img = cv.imread(image_path)
+# Convert image to grayscale
+gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+# Define lower and upper bounds for black and white pixels
+lower = np.array([0, 0, 0])
+upper = np.array([255, 255, 255])
+
+# Create a mask for black and white pixels
+mask = cv.inRange(img, lower, upper)
+
+# Find contours in the mask
+contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+
+# Iterate over the contours
+for contour in contours:
+    x, y, w, h = cv.boundingRect(contour)
+    # Draw a rectangle around the white figure
+    cv.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+    print("Top left point: ", (x, y))
+    print("Top right point: ", (x + w, y))
+    print("Bottom left point: ", (x, y + h))
+    print("Bottom right point: ", (x + w, y + h))
+
+# Show the image
+# cv.imshow("Image", gray)
+cv.waitKey(0)
