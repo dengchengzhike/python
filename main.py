@@ -7,7 +7,7 @@ from random import random
 import airsim
 import time
 import numpy as np
-import cv2 as cv
+import cv2
 import pygame
 from PIL import Image
 
@@ -113,14 +113,6 @@ client.landAsync().join()  # 第五阶段：降落
 # 停止拍摄
 client.stopRecording()
 
-"""
-# get recording path
-recording_path = client.getRecordingPath()
-
-# open recording file
-recording = airsim.Recording(recording_path)
-"""
-
 # access recorded IMU data
 imu_data = client.getImuData()
 
@@ -144,15 +136,7 @@ f.write("acceleration:" + str(xa) + str(ya) + str(za) + '\n')
 f.close()
 client.armDisarm(False)  # 上锁
 client.enableApiControl(False)  # 释放控制权
-"""
-#image_files = os.listdir(image_package)
 
-# Iterate through each image file
-# for image_file in image_files:
-    # Extract the image number from the file name
-    #img_num = int(image_file.split('_')[-1].split('.')[0])
-# print(img_num)
-"""
 path = os.getcwd()
 print(path)
 path = 'D:/airsimproject/record'
@@ -169,54 +153,34 @@ os.chdir(image_folder_path)
 images = [f for f in os.listdir(image_folder_path) if f.endswith('.ppm')]
 image_path = os.path.join(image_folder_path, images[0])
 print(image_path)
-"""
-# Read image
-img = cv.imread(image_path)
-# Convert image to grayscale
-gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-# Define lower and upper bounds for black and white pixels
-lower = np.array([0, 0, 0])
-upper = np.array([255, 255, 255])
 
-# Create a mask for black and white pixels
-mask = cv.inRange(img, lower, upper)
 
-# Find contours in the mask
-contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+# 读取图像
+img = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
-# Iterate over the contours
-for contour in contours:
-    x, y, w, h = cv.boundingRect(contour)
-    # Draw a rectangle around the white figure
-    cv.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-    print("Top left point: ", (x, y))
-    print("Top right point: ", (x + w, y))
-    print("Bottom left point: ", (x, y + h))
-    print("Bottom right point: ", (x + w, y + h))
+# 转换为灰度图
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-# Show the image
-cv.imshow("Image", gray)
-cv.waitKey(0)
-"""
-# Open image
-im = Image.open(image_path)
+# 二值化
+thresh = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
 
-# Convert to numpy array
-im_array = np.array(im)
+# 找到轮廓
 
-# Get the indices where the background is black and the figure is white
+contours, _ = cv2.findContours(thresh[1], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-indices = np.where((im_array[:, :, 0] == 255) & (im_array[:, :, 1] == 255) & (im_array[:, :, 2] == 255))
-# Get the coordinates of the white figure
-coords = np.transpose(indices)
 
-# Get the leftmost, rightmost, topmost and bottommost points
-leftmost = np.min(coords[:, 0])
-rightmost = np.max(coords[:, 0])
-topmost = np.min(coords[:, 1])
-bottommost = np.max(coords[:, 1])
+# 找到最小矩形框
+for cnt in contours:
+   x, y, w, h = cv2.boundingRect(cnt)
+   cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), 2)
+   print("top-left vertex:","(", x, "," ,y, ")")
+   print("top-right vertex:","(", x+w, "," ,y, ")")
+   print("bottom-left vertex:", "(", x, "," ,y+h, ")")
+   print("bottom-right vertex:", "(", x+w, "," ,y+h, ")")
 
-print("Leftmost point:", (leftmost, coords[coords[:, 0] == leftmost][0][1]))
-print("Rightmost point:", (rightmost, coords[coords[:, 0] == rightmost][0][1]))
-print("Topmost point:", (coords[coords[:, 1] == topmost][0][0], topmost))
-print("Bottommost point:", (coords[coords[:, 1] == bottommost][0][0], bottommost))
+
+
+# 显示图像
+cv2.imshow("image", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
